@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Connect four</string>
+    <string name="current_turn">%s Turn</string>
+    <string name="winner_text">%s has won!!</string>
+    <string name="draw_title">Draw!</string>
+    <string name="player_win_title">You win :)</string>
+    <string name="computer_win_title">Computer wins :(</string>
+    <string name="welcome_screen_title">Welcome to connect 4 :)</string>
+    <string name="play_button_label">PLAY</string>
 </resources>

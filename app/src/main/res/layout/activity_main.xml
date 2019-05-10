@@ -7,13 +7,13 @@
 
         <variable
             name="handler"
-            type="com.example.connectfour.MainActivity" />
+            type="com.example.connectfour.ui.MainActivity" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".ui.MainActivity">
 
         <TextView
             android:id="@+id/welcome_message"
@@ -22,7 +22,8 @@
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginBottom="8dp"
-            android:text="Welcome to connect 4 :)"
+            android:text="@string/welcome_screen_title"
+            android:textColor="@android:color/holo_green_light"
             android:textSize="34sp"
             app:layout_constraintBottom_toTopOf="@id/play_button"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -38,7 +39,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginEnd="16dp"
             android:onClick="@{v->handler.onPlayClicked()}"
-            android:text="PLAY"
+            android:text="@string/play_button_label"
             android:textSize="32sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

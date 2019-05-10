@@ -1,4 +1,4 @@
-package com.example.connectfour;
+package com.example.connectfour.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,6 +6,7 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import com.example.connectfour.R;
 import com.example.connectfour.databinding.ActivityMainBinding;
 
 public class MainActivity extends AppCompatActivity {
