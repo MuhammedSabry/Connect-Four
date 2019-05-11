@@ -1,5 +1,7 @@
 package com.example.connectfour.viewmodel;
 
+import android.os.Handler;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -62,39 +64,94 @@ public class PlayerViewModel extends ViewModel {
     }
 
     private void checkForWinner() {
-        int cumulativePlayerHorizontal, cumulativeComputerHorizontal, cumulativePlayerVertical, cumulativeComputerVertical;
+        if (checkHorizontalWin()) return;
+        if (checkForVerticalWin()) return;
+        if (checkForRightDiagonalWin()) return;
+        checkForLeftDiagonalWin();
 
-        //Checking for horizontal winning possibilities
-        for (int i = 0; i < sizeY; i++) {
-            cumulativePlayerHorizontal = 0;
-            cumulativeComputerHorizontal = 0;
-            for (int j = 0; j < sizeX; j++) {
-                if (grid[j][i] == Hole.COMPUTER) {
-                    cumulativePlayerHorizontal = 0;
-                    cumulativeComputerHorizontal += 1;
-                } else if (grid[j][i] == Hole.PLAYER) {
-                    cumulativePlayerHorizontal += 1;
-                    cumulativeComputerHorizontal = 0;
+    }
+
+    private void checkForLeftDiagonalWin() {
+        //Left diagonal check
+        int x = 0;
+        int y = sizeY - 3;
+        while (x < sizeX - 3 && y < sizeY) {
+
+            int playerDiagonal = 0;
+            int computerDiagonal = 0;
+
+            for (int i = 0; x + i < sizeX && y - i >= 0; i++) {
+
+                //Left diagonal check
+                if (grid[x + i][y - i] == Hole.COMPUTER) {
+                    computerDiagonal += 1;
+                    playerDiagonal = 0;
+                } else if (grid[x + i][y - i] == Hole.PLAYER) {
+                    computerDiagonal = 0;
+                    playerDiagonal += 1;
                 } else {
-                    cumulativePlayerHorizontal = 0;
-                    cumulativeComputerHorizontal = 0;
+                    computerDiagonal = 0;
+                    playerDiagonal = 0;
                 }
 
-                if (cumulativeComputerHorizontal == 4) {
+                if (computerDiagonal == 4) {
                     computerHasWon();
                     return;
                 }
-                if (cumulativePlayerHorizontal == 4) {
+                if (playerDiagonal == 4) {
                     playerHasWon();
                     return;
                 }
             }
-        }
 
+            if (y == sizeY - 1)
+                x++;
+            if (x == 0)
+                y++;
+        }
+    }
+
+    private boolean checkForRightDiagonalWin() {
+        //Checking for right diagonal win
+        int x = 0;
+        int y = sizeY - 4;
+        while (x < sizeX - 3 && y < sizeY - 3) {
+
+            int playerDiagonal = 0;
+            int computerDiagonal = 0;
+
+            for (int i = 0; x + i < sizeX && y + i < sizeY; i++) {
+
+                //Right diagonal check
+                if (grid[x + i][y + i] == Hole.COMPUTER) {
+                    computerDiagonal += 1;
+                    playerDiagonal = 0;
+                } else if (grid[x + i][y + i] == Hole.PLAYER) {
+                    computerDiagonal = 0;
+                    playerDiagonal += 1;
+                } else {
+                    computerDiagonal = 0;
+                    playerDiagonal = 0;
+                }
+
+
+                if (hasSomeoneWon(playerDiagonal, computerDiagonal))
+                    return true;
+            }
+
+            if (y == 0)
+                x++;
+            if (x == 0)
+                y--;
+        }
+        return false;
+    }
+
+    private boolean checkForVerticalWin() {
         //Checking for vertical winning possibilities
         for (int i = 0; i < sizeX; i++) {
-            cumulativePlayerVertical = 0;
-            cumulativeComputerVertical = 0;
+            int cumulativePlayerVertical = 0;
+            int cumulativeComputerVertical = 0;
             for (int j = 0; j < sizeY; j++) {
                 if (grid[i][j] == Hole.COMPUTER) {
                     cumulativeComputerVertical += 1;
@@ -109,16 +166,58 @@ public class PlayerViewModel extends ViewModel {
 
                 if (cumulativeComputerVertical == 4) {
                     computerHasWon();
-                    return;
+                    return true;
                 }
                 if (cumulativePlayerVertical == 4) {
                     playerHasWon();
-                    return;
+                    return true;
                 }
 
             }
         }
+        return false;
+    }
 
+    private boolean checkHorizontalWin() {
+        //Checking for horizontal winning possibilities
+        for (int i = 0; i < sizeY; i++) {
+            int cumulativePlayerHorizontal = 0;
+            int cumulativeComputerHorizontal = 0;
+            for (int j = 0; j < sizeX; j++) {
+                if (grid[j][i] == Hole.COMPUTER) {
+                    cumulativePlayerHorizontal = 0;
+                    cumulativeComputerHorizontal += 1;
+                } else if (grid[j][i] == Hole.PLAYER) {
+                    cumulativePlayerHorizontal += 1;
+                    cumulativeComputerHorizontal = 0;
+                } else {
+                    cumulativePlayerHorizontal = 0;
+                    cumulativeComputerHorizontal = 0;
+                }
+
+                if (cumulativeComputerHorizontal == 4) {
+                    computerHasWon();
+                    return true;
+                }
+                if (cumulativePlayerHorizontal == 4) {
+                    playerHasWon();
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasSomeoneWon(int cumulativePlayerRightDiagonal, int cumulativeComputerRightDiagonal) {
+        if (cumulativeComputerRightDiagonal == 4) {
+            computerHasWon();
+            return true;
+        }
+        if (cumulativePlayerRightDiagonal == 4) {
+            playerHasWon();
+            return true;
+        }
+        return false;
     }
 
     private void playerHasWon() {
@@ -146,13 +245,15 @@ public class PlayerViewModel extends ViewModel {
     }
 
     private void makeComputerMove() {
+        new Handler().postDelayed(() -> {
+            int moveIndex = new Random().nextInt(sizeX);
 
-        int moveIndex = new Random().nextInt(sizeX);
+            while (!validTurn(moveIndex))
+                moveIndex = new Random().nextInt(sizeX);
 
-        while (!validTurn(moveIndex))
-            moveIndex = new Random().nextInt(sizeX);
+            makeMove(moveIndex);
+        }, 100);
 
-        makeMove(moveIndex);
     }
 
     private void addCoin(int xIndex) {
