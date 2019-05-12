@@ -5,5 +5,5 @@
         android:title="Save" />
     <item
         android:id="@+id/start_action"
-        android:title="StartPlaying" />
+        android:title="Start Playing" />
 </menu>
