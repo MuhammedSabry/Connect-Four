@@ -224,6 +224,13 @@ public class PlayerViewModel extends ViewModel {
     }
 
     private int getScore(Hole[][] grid) {
+
+        Player winner = getWinner(grid);
+        if (winner == Player.PLAYER)
+            return Integer.MIN_VALUE;
+        if (winner == Player.COMPUTER)
+            return Integer.MAX_VALUE;
+
         int winLength = 4;
 
         int[] player1Lines = new int[winLength];
@@ -239,79 +246,97 @@ public class PlayerViewModel extends ViewModel {
         for (int y = 0; y < sizeY; y++) {
             for (int x = 0; x < sizeX; x++) {
 
-                Object[] lineRight = {0, 0, true};
-                Object[] lineDown = {0, 0, true};
-                Object[] lineDownLeft = {0, 0, true};
-                Object[] lineDownRight = {0, 0, true};
+                int playerHorizontal = 0;
+                int computerHorizontal = 0;
+                boolean isValidHorizontal = true;
 
+                int playerVertical = 0;
+                int computerVertical = 0;
+                boolean isValidVertical = true;
+
+                int playerRightDiagonal = 0;
+                int computerRightDiagonal = 0;
+                boolean isValidRightDiagonal = true;
+
+                int playerLeftDiagonal = 0;
+                int computerLeftDiagonal = 0;
+                boolean isValidLeftDiagonal = true;
 
                 // Get line segments for each player
                 for (int w = 0; w < winLength; w++) {
 
                     // Check right
                     if (x + winSize < sizeX) {
-                        if (grid[x + w][y] == Hole.COMPUTER) {
-                            lineRight[0] = (int) lineRight[0] + 1;
-                        }
 
-                        if (grid[x + w][y] == Hole.PLAYER) {
-                            lineRight[1] = (int) lineRight[1] + 1;
-                        }
-                    } else {
-                        lineRight[2] = false;
-                    }
+                        if (grid[x + w][y] == Hole.COMPUTER)
+                            computerHorizontal++;
+
+                        if (grid[x + w][y] == Hole.PLAYER)
+                            playerHorizontal++;
+
+                    } else
+                        isValidHorizontal = false;
 
 
                     // Check down and diagonals
                     if (y + winSize < sizeY) {
 
-                        // Down
-                        if (grid[x][y + w] == Hole.COMPUTER) {
-                            lineDown[0] = (int) lineDown[0] + 1;
-                        }
+                        //Vertical check
+                        if (grid[x][y + w] == Hole.COMPUTER)
+                            computerVertical++;
 
-                        if (grid[x][y + w] == Hole.PLAYER) {
-                            lineDown[1] = (int) lineDown[1] + 1;
-                        }
+                        if (grid[x][y + w] == Hole.PLAYER)
+                            playerVertical++;
 
-
-                        // Down left
+                        // Left Diagonal
                         if (x - winSize >= 0) {
-                            if (grid[x - w][y + w] == Hole.COMPUTER) {
-                                lineDownLeft[0] = (int) lineDownLeft[0] + 1;
-                            }
+                            if (grid[x - w][y + w] == Hole.COMPUTER)
+                                computerLeftDiagonal++;
 
-                            if (grid[x - w][y + w] == Hole.PLAYER) {
-                                lineDownLeft[1] = (int) lineDownLeft[1] + 1;
-                            }
+                            if (grid[x - w][y + w] == Hole.PLAYER)
+                                playerLeftDiagonal++;
+
                         } else {
-                            lineDownLeft[2] = false;
+                            isValidLeftDiagonal = false;
                         }
 
 
-                        // Down right
+                        // Right diagonal
                         if (x + winSize < sizeX) {
-                            if (grid[x + w][y + w] == Hole.COMPUTER) {
-                                lineDownRight[0] = (int) lineDownRight[0] + 1;
-                            }
+                            if (grid[x + w][y + w] == Hole.COMPUTER)
+                                computerRightDiagonal++;
 
-                            if (grid[x + w][y + w] == Hole.PLAYER) {
-                                lineDownRight[1] = (int) lineDownRight[1] + 1;
-                            }
-                        } else {
-                            lineDownRight[2] = false;
-                        }
+                            if (grid[x + w][y + w] == Hole.PLAYER)
+                                playerRightDiagonal++;
+                        } else
+                            isValidRightDiagonal = false;
                     } else {
-                        lineDown[2] = false;
-                        lineDownLeft[2] = false;
-                        lineDownRight[2] = false;
+                        isValidVertical = false;
+                        isValidLeftDiagonal = false;
+                        isValidRightDiagonal = false;
                     }
                 }
 
-                updateLines(lineRight, player1Lines, player2Lines);
-                updateLines(lineDown, player1Lines, player2Lines);
-                updateLines(lineDownLeft, player1Lines, player2Lines);
-                updateLines(lineDownRight, player1Lines, player2Lines);
+                updateCount(computerHorizontal,
+                        playerHorizontal,
+                        isValidHorizontal,
+                        player1Lines,
+                        player2Lines);
+                updateCount(computerVertical,
+                        playerVertical,
+                        isValidVertical,
+                        player1Lines,
+                        player2Lines);
+                updateCount(computerLeftDiagonal,
+                        playerLeftDiagonal,
+                        isValidLeftDiagonal,
+                        player1Lines,
+                        player2Lines);
+                updateCount(computerRightDiagonal,
+                        playerRightDiagonal,
+                        isValidRightDiagonal,
+                        player1Lines,
+                        player2Lines);
             }
         }
 
@@ -335,22 +360,20 @@ public class PlayerViewModel extends ViewModel {
         return score;
     }
 
-    // Update player's line counts
-    private void updateLines(Object[] line, int[] player1Lines, int[] player2Lines) {
 
-        // Make sure line is valid
-        if ((int) line[0] > 0 && (int) line[1] > 0) {
-            line[2] = false;
-        }
+    private void updateCount(int computer, int player, boolean isValid, int[] player1Lines, int[] player2Lines) {
 
-        // Update line counts
-        if ((boolean) line[2]) {
-            if ((int) line[0] > 0) {
-                player1Lines[(int) line[0] - 1]++;
-            }
-            if ((int) line[1] > 0) {
-                player2Lines[(int) line[1] - 1]++;
-            }
+        //Make sure line is valid
+        if (computer > 0 && player > 0)
+            isValid = false;
+
+        //Update line counts
+        if (isValid) {
+            if (computer > 0)
+                player1Lines[computer - 1]++;
+
+            if (player > 0)
+                player2Lines[player - 1]++;
         }
     }
 
