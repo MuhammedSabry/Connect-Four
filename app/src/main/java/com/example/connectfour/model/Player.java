@@ -1,7 +1,7 @@
 package com.example.connectfour.model;
 
 public enum Player {
-    COMPUTER, PLAYER;
+    COMPUTER, PLAYER, NONE;
 
     @Override
     public String toString() {

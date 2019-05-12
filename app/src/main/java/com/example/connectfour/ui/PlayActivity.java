@@ -32,8 +32,9 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
         initViewModel();
         initViews();
         viewModel.getGrid().observe(this, this::setGrid);
-        viewModel.getWinner().observe(this, this::onWinning);
-        viewModel.isDraw().observe(this, isDraw -> this.onDraw());
+        viewModel.getWinnerLiveData().observe(this, this::onWinning);
+        viewModel.isDrawLiveData().observe(this, isDraw -> this.onDraw());
+        viewModel.getCurrentPlayer().observe(this, this::setHeader);
     }
 
     private void onDraw() {
@@ -50,7 +51,6 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
 
     private void setGrid(Hole[][] grid) {
         this.gridAdapter.setGrid(grid);
-        this.setHeader();
     }
 
     private void initViewModel() {
@@ -59,7 +59,7 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
 
     private void initViews() {
         initGridView();
-        setHeader();
+        setHeader(Player.PLAYER);
     }
 
     private void initGridView() {
@@ -83,13 +83,13 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
         this.binding = DataBindingUtil.setContentView(this, R.layout.activity_play);
     }
 
-    private void setHeader() {
-        binding.turnText.setText(getResources().getString(R.string.current_turn, viewModel.getCurrentPlayer() == Player.PLAYER ? "Your" : "Computer"));
-        binding.turnText.setTextColor(getResources().getColor(getHeaderColor()));
+    private void setHeader(Player player) {
+        binding.turnText.setText(getResources().getString(R.string.current_turn, player == Player.PLAYER ? "Your" : "Computer"));
+        binding.turnText.setTextColor(getResources().getColor(getHeaderColor(player)));
     }
 
-    private int getHeaderColor() {
-        return viewModel.getCurrentPlayer() == Player.PLAYER ? R.color.player_color : R.color.computer_color;
+    private int getHeaderColor(Player player) {
+        return player == Player.PLAYER ? R.color.player_color : R.color.computer_color;
     }
 
     @Override
