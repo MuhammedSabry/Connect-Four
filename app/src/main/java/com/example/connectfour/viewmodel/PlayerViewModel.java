@@ -8,10 +8,14 @@ import androidx.lifecycle.ViewModel;
 import com.example.connectfour.model.Hole;
 import com.example.connectfour.model.Node;
 import com.example.connectfour.model.Player;
+import com.example.connectfour.model.SavedBoard;
+import com.example.connectfour.preferences.HoleStorage;
 
 public class PlayerViewModel extends ViewModel {
 
     private final int sizeX = 7, sizeY = 6;
+    private final HoleStorage holeStorage;
+    private boolean isFreePlay = false;
     private Hole[][] grid = new Hole[sizeX][sizeY];
     private Player currentPlayer = Player.PLAYER;
     private MutableLiveData<Hole[][]> gridLiveData;
@@ -20,13 +24,30 @@ public class PlayerViewModel extends ViewModel {
     private MutableLiveData<Boolean> drawLiveData;
     private boolean isDraw = false;
     private MutableLiveData<Player> currentPlayerLiveData;
+    private int difficulty;
 
-    public PlayerViewModel() {
+    public PlayerViewModel(int difficulty, boolean isNewGame, boolean isCustomGame) {
         initGrid();
         this.gridLiveData = new MutableLiveData<>(this.grid);
         this.winnerLiveData = new MutableLiveData<>();
         this.drawLiveData = new MutableLiveData<>();
         this.currentPlayerLiveData = new MutableLiveData<>();
+        this.difficulty = difficulty;
+        holeStorage = new HoleStorage();
+
+        if (isCustomGame)
+            this.isFreePlay = true;
+
+        else if (!isNewGame && holeStorage.getSavedBoard() != null) {
+            SavedBoard savedBoard = holeStorage.getSavedBoard();
+            this.grid = savedBoard.getGrid();
+            this.isDraw = savedBoard.isDraw();
+            this.hasWinner = savedBoard.isWinner();
+            this.currentPlayer = savedBoard.getCurrentPlayer();
+            afterCoinAdded(false);
+            notifyCurrentPlayer();
+        }
+
     }
 
     private void initGrid() {
@@ -36,15 +57,18 @@ public class PlayerViewModel extends ViewModel {
     }
 
     public void onCoinClicked(int xIndex) {
-        if (this.currentPlayer == Player.PLAYER && validMove(xIndex, grid) && !hasWinner)
+        if ((this.currentPlayer == Player.PLAYER || isFreePlay) && validMove(xIndex, grid) && !hasWinner)
             makeMove(xIndex);
     }
-
 
     private void makeMove(int xIndex) {
         if (hasWinner || isDraw)
             return;
         addCoin(xIndex, this.currentPlayer, this.grid);
+        afterCoinAdded(true);
+    }
+
+    private void afterCoinAdded(boolean shouldSwitchRoles) {
         onMoveMade();
 
         Player winner = getWinner(grid);
@@ -63,7 +87,7 @@ public class PlayerViewModel extends ViewModel {
             }
 
         }
-        if (!hasWinner && !isDraw)
+        if (!hasWinner && !isDraw && shouldSwitchRoles)
             switchTurns();
     }
 
@@ -393,9 +417,13 @@ public class PlayerViewModel extends ViewModel {
     }
 
     private void onTurnSwitched() {
-        this.currentPlayerLiveData.postValue(this.currentPlayer);
+        notifyCurrentPlayer();
         if (currentPlayer == Player.COMPUTER)
             makeComputerMove();
+    }
+
+    private void notifyCurrentPlayer() {
+        this.currentPlayerLiveData.postValue(this.currentPlayer);
     }
 
     private void onMoveMade() {
@@ -439,6 +467,7 @@ public class PlayerViewModel extends ViewModel {
                 childNode.setAlpha(alpha);
                 childNode.setBeta(beta);
                 childNode.setMax(true);
+                childNode.setPosition(positionToPlay);
                 node.addChild(childNode);
                 if (beta <= alpha)
                     break;
@@ -477,26 +506,36 @@ public class PlayerViewModel extends ViewModel {
 
     private void makeComputerMove() {
 
+        if (isFreePlay)
+            return;
         Runnable runnable = () -> {
-            int option = 0;
-
             Node root = new Node(Integer.MIN_VALUE, Integer.MAX_VALUE, this.grid);
             root.setMax(true);
-            miniMax(this.grid, 6, Integer.MIN_VALUE, Integer.MAX_VALUE, true, root);
 
-            makeMove(getBestOption(option, root));
+            int depth;
+            if (difficulty == 1)
+                depth = 5;
+            else if (difficulty == 2)
+                depth = 7;
+            else
+                depth = 3;
+            miniMax(this.grid, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, true, root);
+
+            makeMove(getBestOption(root));
 
         };
         Thread thread = new Thread(runnable);
         thread.start();
     }
 
-    private int getBestOption(int option, Node root) {
+    private int getBestOption(Node root) {
         int max = Integer.MIN_VALUE;
+        int option = -1;
         for (int i = 0; i < root.getChildren().size(); i++) {
-            if (root.getChildren().get(i).getAlpha() > max && validMove(i, grid)) {
-                max = root.getChildren().get(i).getAlpha();
-                option = i;
+            Node node = root.getChildren().get(i);
+            if (option == -1 || node.getAlpha() > max) {
+                max = node.getAlpha();
+                option = node.getPosition();
             }
         }
         return option;
@@ -547,5 +586,13 @@ public class PlayerViewModel extends ViewModel {
 
     public LiveData<Player> getCurrentPlayer() {
         return currentPlayerLiveData;
+    }
+
+    public void onSaveGameClicked() {
+        this.holeStorage.saveBoard(new SavedBoard(this.grid, hasWinner, isDraw, this.currentPlayer));
+    }
+
+    public void onStartGameClicked() {
+        this.isFreePlay = false;
     }
 }

@@ -5,6 +5,8 @@
     <string name="draw_title">Draw!</string>
     <string name="player_win_title">You win :)</string>
     <string name="computer_win_title">Computer wins :(</string>
-    <string name="welcome_screen_title">Welcome to connect 4 :)</string>
-    <string name="play_button_label">PLAY</string>
+    <string name="welcome_screen_title">Welcome to connect 4</string>
+    <string name="play_button_label">NEW GAME</string>
+    <string name="load_game_button_label">Load Game</string>
+    <string name="custom_game_button_label">Custom Board</string>
 </resources>

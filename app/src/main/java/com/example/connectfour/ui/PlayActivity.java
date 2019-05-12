@@ -1,11 +1,14 @@
 package com.example.connectfour.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -37,6 +40,27 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
         viewModel.getCurrentPlayer().observe(this, this::setHeader);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+        menuInflater.inflate(R.menu.play_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.save_action:
+                viewModel.onSaveGameClicked();
+                return true;
+            case R.id.start_action:
+                viewModel.onStartGameClicked();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     private void onDraw() {
         binding.turnText.setText(getResources().getString(R.string.draw_title));
     }
@@ -54,7 +78,11 @@ public class PlayActivity extends AppCompatActivity implements GridAdapter.OnCoi
     }
 
     private void initViewModel() {
-        this.viewModel = ViewModelProviders.of(this).get(PlayerViewModel.class);
+        Intent intent = getIntent();
+        boolean isNewGame = intent.getBooleanExtra(MainActivity.IS_NEW_GAME_INTENT_EXTRA, true);
+        boolean isCustomGame = intent.getBooleanExtra(MainActivity.IS_CUSTOM_GAME_INTENT_EXTRA, false);
+        int difficulty = intent.getIntExtra(MainActivity.DIFFICULTY_INTENT_EXTRA, MainActivity.DIFFICULTY_EASY);
+        this.viewModel = new PlayerViewModel(difficulty, isNewGame, isCustomGame);
     }
 
     private void initViews() {

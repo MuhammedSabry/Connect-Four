@@ -11,6 +11,7 @@ public class Node {
     private int beta;
     private Hole[][] board;
     private boolean isMax;
+    private int position;
 
     public Node(int alpha, int beta, Hole[][] board) {
         this.alpha = alpha;
@@ -59,5 +60,13 @@ public class Node {
 
     public void setBeta(int beta) {
         this.beta = beta;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 }
